@@ -7,6 +7,8 @@ use starknet::storage::StoragePointerReadAccess;
 use starknet::storage::StoragePointerWriteAccess;
 use starknet::storage::Map;
 use starknet::storage::StoragePathEntry;
+use core::starknet::get_caller_address;
+use core::starknet::ContractAddress;
 
 
     #[storage]
@@ -14,7 +16,7 @@ use starknet::storage::StoragePathEntry;
         name: felt252,
         symbol: felt252,
         totalSupply: u128,
-        balance: Map::<starknet::ContractAddress, u128>,
+        balance: Map::<ContractAddress, u128>,
     }
 
     #[event]
@@ -26,8 +28,8 @@ use starknet::storage::StoragePathEntry;
     #[derive(Drop, starknet::Event)]
     pub struct Transfer {
         #[key]
-        from: starknet::ContractAddress,
-        to: starknet::ContractAddress,
+        from: ContractAddress,
+        to: ContractAddress,
         amount: u128
     }
 
@@ -36,17 +38,17 @@ use starknet::storage::StoragePathEntry;
         self.totalSupply.write(totalSupply);
         self.name.write(name);
         self.symbol.write(symbol);
-        let caller = starknet::get_caller_address();
+        let caller = get_caller_address();
         self.balance.entry(caller).write(totalSupply);
     }
 
     #[abi(embed_v0)]
     impl SimpleERC20ContractImpl of erc20bis::interface::simpleERC20::ISimpleERC20Contract<ContractState> {
-        fn balanceOf(self: @ContractState, account: starknet::ContractAddress ) -> u128 {
+        fn balanceOf(self: @ContractState, account: ContractAddress ) -> u128 {
             self.balance.entry(account).read()
         }
-        fn transfer(ref self: ContractState, recipient: starknet::ContractAddress, amount: u128) {
-            let caller = starknet::get_caller_address();
+        fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u128) {
+            let caller = get_caller_address();
             let funds = self.balance.entry(caller).read();
             assert(amount != 0, 'Need some funds');
             assert(funds >= amount, 'Not enough funds');
