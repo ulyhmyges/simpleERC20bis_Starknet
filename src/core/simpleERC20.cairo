@@ -8,7 +8,7 @@ use starknet::storage::StoragePointerWriteAccess;
 use starknet::storage::Map;
 use starknet::storage::StoragePathEntry;
 use core::starknet::get_caller_address;
-use core::starknet::ContractAddress;
+use core::starknet::contract_address::ContractAddress;
 
 
     #[storage]
@@ -17,6 +17,7 @@ use core::starknet::ContractAddress;
         symbol: felt252,
         totalSupply: u128,
         balance: Map::<ContractAddress, u128>,
+        owner: ContractAddress
     }
 
     #[event]
@@ -39,6 +40,7 @@ use core::starknet::ContractAddress;
         self.name.write(name);
         self.symbol.write(symbol);
         let caller = get_caller_address();
+        self.owner.write(caller);
         self.balance.entry(caller).write(totalSupply);
     }
 
@@ -47,6 +49,7 @@ use core::starknet::ContractAddress;
         fn balanceOf(self: @ContractState, account: ContractAddress ) -> u128 {
             self.balance.entry(account).read()
         }
+
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u128) {
             let caller = get_caller_address();
             let funds = self.balance.entry(caller).read();
@@ -57,16 +60,21 @@ use core::starknet::ContractAddress;
             self.balance.entry(recipient).write(funds_recipient + amount);
             self.emit(Transfer{from: caller, to: recipient, amount: amount});
         }
+
         fn name(self: @ContractState) -> felt252 {
             self.name.read()
         }
+
         fn symbol(self: @ContractState) -> felt252 {
             self.symbol.read()
         }
+
         fn totalSupply(self: @ContractState) -> u128 {
             self.totalSupply.read()
         }
-    }
- 
 
+        fn owner(self: @ContractState) -> ContractAddress {
+            self.owner.read()
+        }
+    }
 }

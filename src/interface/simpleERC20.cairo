@@ -5,4 +5,5 @@ pub trait ISimpleERC20Contract<TContractState> {
     fn name(self: @TContractState) -> felt252;
     fn symbol(self: @TContractState) -> felt252;
     fn totalSupply(self: @TContractState) -> u128;
+    fn owner(self: @TContractState) -> starknet::ContractAddress;
 }
